@@ -505,7 +505,7 @@ print(f"Fit 1/R_N over A: dW={deltaW_corr2_1} [um], rho_0={rho_0_corr2_1} [Ohm*u
 print(f"Fit I_c over A: dW={deltaW_corr2_2} [um], j_c={j_c_corr2_2} [A/cm^2]\n")
 
 # junctions_Isweep_df = junctions_Isweep_df.assign(deltaA_corr2=deltaA_corr2)
-junctions_Isweep_df = junctions_Isweep_df.assign(deltaW_corr2=deltaW_corr2_1)
+junctions_Isweep_df = junctions_Isweep_df.assign(deltaW_corr2=deltaW_corr2_2)
 junctions_Isweep_df["A_corr2"] = (junctions_Isweep_df["W"] + junctions_Isweep_df["deltaW_corr2"])**2  # formerly: junctions_Isweep_df["A"] + junctions_Isweep_df["deltaA_corr2"]
 junctions_Isweep_df["1_over_A_corr2"] = 1 / junctions_Isweep_df["A_corr2"]
 junctions_Isweep_df["j_c_corr2"] = junctions_Isweep_df["I_c_mean"] / junctions_Isweep_df["A_corr2"] * 10**8
@@ -515,7 +515,7 @@ keys = ["A", "A_corr2", "1_over_A_corr2", "j_c_corr2", "R_spec_corr2"]
 tmp_mean_df = junctions_Isweep_df[keys].groupby("A").mean().reset_index(drop=False)
 junctions_mean_df[keys] = tmp_mean_df[keys]
 
-junctions_Isweep_filtered_out_df = junctions_Isweep_filtered_out_df.assign(deltaW_corr2=deltaW_corr2_1)
+junctions_Isweep_filtered_out_df = junctions_Isweep_filtered_out_df.assign(deltaW_corr2=deltaW_corr2_2)
 junctions_Isweep_filtered_out_df["A_corr2"] = (junctions_Isweep_filtered_out_df["W"] + junctions_Isweep_filtered_out_df["deltaW_corr2"])**2
 junctions_Isweep_filtered_out_df["j_c_corr2"] = junctions_Isweep_filtered_out_df["I_c_mean"] / junctions_Isweep_filtered_out_df["A_corr2"] * 10**8
 
@@ -736,7 +736,7 @@ p_j_c_corr1 = plot_marker_for_chips(
 
 p_j_c_corr2 = plot_marker_for_chips(
     html_name="critical_current_densities_corrected_area_2.html",
-    title="Critical Current Densities, corrected Area, Approach 2",
+    title="Critical Current Densities, Area Correction",
     xlist=["A", "A_corr2"],
     ylist=["j_c", "j_c_corr2"],
     fillcolorlist=["same", None],
@@ -745,6 +745,8 @@ p_j_c_corr2 = plot_marker_for_chips(
     tooltips=TOOLTIPS,
     plot_mean=True,
     legend_loc="top_right",
+    annotation_text="$$j_{c,corr} = " + f"{j_c_corr2_2:.2f}" + "A/cm^2,~\Delta W = " + f"{Float(deltaW_corr2_2*10**(-6)):.2h}m$$",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
+    annotation_pos="bottom_right",
     show_in_browser=True,
 )
 
@@ -776,7 +778,7 @@ p_I_c = plot_marker_for_chips(
     fit_params=[],
     annotation_text=annot_str,  # f"$$j_c = {j_c:.2f}A/cm^2$$",
     annotation_pos='bottom_right',
-    show_in_browser=True,
+    show_in_browser=False,
 )
 
 ### --- output I_c over Area, with corrected area --- ###
@@ -787,7 +789,7 @@ p_I_c = plot_marker_for_chips(
 # j_c_line0 = a[0]*10**8
 p_I_c_A_corr1 = plot_marker_for_chips(
     html_name="critical_currents_corrected_area_1.html",
-    title="Critical Currents Corrected Area, Approach 1",
+    title="Critical Currents Corrected Area, corrected area, Approach 1",
     xlist=["A", "A_corr1"],
     ylist=["I_c_mean", "I_c_mean"],
     fillcolorlist=["same", None],
@@ -811,7 +813,7 @@ p_I_c_A_corr1 = plot_marker_for_chips(
 fit_params = []
 p_I_c_A_corr2 = plot_marker_for_chips(
     html_name="critical_currents_corrected_area_2.html",
-    title="Critical Currents Corrected Area, Approach 2",
+    title="Critical Currents, Area Correction",
     xlist=["A", "A_corr2"],
     ylist=["I_c_mean", "I_c_mean"],
     fillcolorlist=["same", None],
@@ -875,7 +877,7 @@ p_R_N_invA_corr2 = plot_marker_for_chips(
     plot_mean=True,
     legend_loc="top_left",
     fit="line",
-    show_in_browser=True,
+    show_in_browser=False,
 )
 
 
@@ -897,7 +899,7 @@ p_invR_N_A_corr1 = plot_marker_for_chips(
 ### --- output 1/R_N over Area --- ###
 p_invR_N_A_corr2 = plot_marker_for_chips(
     html_name="normal_resistances_invR_N_corr2.html",
-    title="Inverted Normal Resistance over Area, corrected area, Approach 2",
+    title="Inverted Normal Resistance over Area, Area Correction",
     xlist=["A", "A_corr2"],
     ylist=["1_over_R_N", "1_over_R_N"],
     fillcolorlist=["same", None],
