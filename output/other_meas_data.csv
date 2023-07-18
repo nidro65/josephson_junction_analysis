@@ -1,0 +1,6 @@
+,name,T,meas,type,L,W,A
+0,CH1_JJ20x20_curved_T4p36K_Vsweep,4.36,Vsweep,curved,20,20,400
+1,CH6_JJ9x9_straight_T4p27K_Vsweep,4.27,Vsweep,straight,9,9,81
+2,CH1_JJ9x9_curved_T4p27K_Vsweep,4.27,Vsweep,curved,9,9,81
+3,CH1_JJ5x5_straight_T4p40K_Vsweep,4.4,Vsweep,straight,5,5,25
+4,CH2_JJ7x7_straight_T4p47K_Vsweep,4.47,Vsweep,straight,7,7,49

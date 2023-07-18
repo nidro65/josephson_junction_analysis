@@ -1,0 +1,7 @@
+*.png
+*.ipynb
+*.mplstyle
+NanoPr_CleanRoom
+*old_data
+Paper
+report
