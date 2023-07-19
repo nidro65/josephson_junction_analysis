@@ -579,14 +579,14 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                 p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}", view=view, size=10, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
 
             # plot points that were filtered out muted
-            if not "corr" in x and not "corr" in ylist[i]:
-                if not chip_filtered_out_df[chip_filtered_out_df["type"] == "curved"].empty:
-                    view = CDSView(filter=(filter_curved & filter_chip))
-                    if fillcolorlist[i] == "same":
-                        fillcolor = "blue"
-                    else:
-                        fillcolor = fillcolorlist[i]
-                    p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
+            # if not "corr" in x and not "corr" in ylist[i]:
+            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "curved"].empty:
+                view = CDSView(filter=(filter_curved & filter_chip))
+                if fillcolorlist[i] == "same":
+                    fillcolor = "blue"
+                else:
+                    fillcolor = fillcolorlist[i]
+                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
 
             ### short feedlines
             # plot points with different marker for every chip 
@@ -599,14 +599,14 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                 p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}", view=view, size=10, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
             
             # plot points that were filtered out muted
-            if not "corr" in x and not "corr" in ylist[i]:
-                if not chip_filtered_out_df[chip_filtered_out_df["type"] == "straight"].empty:
-                    view = CDSView(filter=(filter_straight & filter_chip))
-                    if fillcolorlist[i] == "same":
-                        fillcolor = "red"
-                    else:
-                        fillcolor = fillcolorlist[i]
-                    p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
+            # if not "corr" in x and not "corr" in ylist[i]:
+            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "straight"].empty:
+                view = CDSView(filter=(filter_straight & filter_chip))
+                if fillcolorlist[i] == "same":
+                    fillcolor = "red"
+                else:
+                    fillcolor = fillcolorlist[i]
+                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
     
             min_x = chip_df[x].min() if min_x > chip_df[x].min() else min_x
             max_x = chip_df[x].max() if max_x < chip_df[x].max() else max_x
@@ -720,19 +720,19 @@ p_j_c = plot_marker_for_chips(
     show_in_browser=False,
 )
 
-p_j_c_corr1 = plot_marker_for_chips(
-    html_name="critical_current_densities_corrected_area_1.html",
-    title="Critical Current Densities, corrected Area, Approach 1",
-    xlist=["A", "A_corr1"],
-    ylist=["j_c", "j_c_corr1"],
-    fillcolorlist=["same", None],
-    xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
-    ylabel=r"\[ \text{Critical Current Density } j_c \mathrm{~[A/cm^2]} \]",
-    tooltips=TOOLTIPS,
-    plot_mean=True,
-    legend_loc="top_right",
-    show_in_browser=False,
-)
+# p_j_c_corr1 = plot_marker_for_chips(
+#     html_name="critical_current_densities_corrected_area_1.html",
+#     title="Critical Current Densities, corrected Area, Approach 1",
+#     xlist=["A", "A_corr1"],
+#     ylist=["j_c", "j_c_corr1"],
+#     fillcolorlist=["same", None],
+#     xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
+#     ylabel=r"\[ \text{Critical Current Density } j_c \mathrm{~[A/cm^2]} \]",
+#     tooltips=TOOLTIPS,
+#     plot_mean=True,
+#     legend_loc="top_right",
+#     show_in_browser=False,
+# )
 
 p_j_c_corr2 = plot_marker_for_chips(
     html_name="critical_current_densities_corrected_area_2.html",
@@ -787,22 +787,22 @@ p_I_c = plot_marker_for_chips(
 # y = np.array(junctions_Isweep_df["I_c_mean"])
 # a, _, _, _ = np.linalg.lstsq(x, y, rcond=None)
 # j_c_line0 = a[0]*10**8
-p_I_c_A_corr1 = plot_marker_for_chips(
-    html_name="critical_currents_corrected_area_1.html",
-    title="Critical Currents Corrected Area, corrected area, Approach 1",
-    xlist=["A", "A_corr1"],
-    ylist=["I_c_mean", "I_c_mean"],
-    fillcolorlist=["same", None],
-    xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
-    ylabel=r"\[ \text{Critical Current } I_c \mathrm{~[A]} \]",
-    tooltips=TOOLTIPS,
-    plot_mean=True,
-    legend_loc="top_left",
-    fit="line0intercept",
-    # annotation_text="$$j_{c,corr} = " + f"{j_c_line0:.2f}" + "A/cm^2$$",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
-    # annotation_pos="bottom_right",
-    show_in_browser=False,
-)
+# p_I_c_A_corr1 = plot_marker_for_chips(
+#     html_name="critical_currents_corrected_area_1.html",
+#     title="Critical Currents Corrected Area, corrected area, Approach 1",
+#     xlist=["A", "A_corr1"],
+#     ylist=["I_c_mean", "I_c_mean"],
+#     fillcolorlist=["same", None],
+#     xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
+#     ylabel=r"\[ \text{Critical Current } I_c \mathrm{~[A]} \]",
+#     tooltips=TOOLTIPS,
+#     plot_mean=True,
+#     legend_loc="top_left",
+#     fit="line0intercept",
+#     # annotation_text="$$j_{c,corr} = " + f"{j_c_line0:.2f}" + "A/cm^2$$",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
+#     # annotation_pos="bottom_right",
+#     show_in_browser=False,
+# )
 
 # x = junctions_Isweep_df["A"].to_numpy()
 # x = x[:,np.newaxis]
@@ -834,35 +834,35 @@ print(f"\nParams fit, deltaW={fit_params[0][0]}, j_C={fit_params[0][1]*10**(8)}"
 print(fit_params)
 
 ### --- output specific R over Area --- ###
-p_R_spec = plot_marker_for_chips(
-    html_name="specific_resistances.html",
-    title="Specific Resistances",
-    xlist=["A", "A_corr1"],
-    ylist=["R_spec", "R_spec_corr1"],
-    fillcolorlist=["same", None],
-    xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
-    ylabel=r"\[\text{Specific Resistance } \rho_{0} \mathrm{~[\Omega ]}\]",
-    tooltips=TOOLTIPS,
-    plot_mean=True,
-    legend_loc="top_right",
-    show_in_browser=False,
-)
+# p_R_spec = plot_marker_for_chips(
+#     html_name="specific_resistances.html",
+#     title="Specific Resistances",
+#     xlist=["A", "A_corr1"],
+#     ylist=["R_spec", "R_spec_corr1"],
+#     fillcolorlist=["same", None],
+#     xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
+#     ylabel=r"\[\text{Specific Resistance } \rho_{0} \mathrm{~[\Omega ]}\]",
+#     tooltips=TOOLTIPS,
+#     plot_mean=True,
+#     legend_loc="top_right",
+#     show_in_browser=False,
+# )
 
 ### --- output R_N over 1/Area --- ###
-p_R_N_invA_corr1 = plot_marker_for_chips(
-    html_name="normal_resistances_invA_corr1.html",
-    title="Normal Resistance over Inverted Area, corrected area, Approach 1",
-    xlist=["1_over_A", "1_over_A_corr1"],
-    ylist=["R_N", "R_N"],
-    fillcolorlist=["same", None],
-    xlabel=r"\[\text{Inverse Junction Area } 1/A \mathrm{~[1 / \mu m^{2}]}\]",
-    ylabel=r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]",
-    tooltips=TOOLTIPS,
-    plot_mean=True,
-    legend_loc="top_left",
-    fit="line",
-    show_in_browser=False,
-)
+# p_R_N_invA_corr1 = plot_marker_for_chips(
+#     html_name="normal_resistances_invA_corr1.html",
+#     title="Normal Resistance over Inverted Area, corrected area, Approach 1",
+#     xlist=["1_over_A", "1_over_A_corr1"],
+#     ylist=["R_N", "R_N"],
+#     fillcolorlist=["same", None],
+#     xlabel=r"\[\text{Inverse Junction Area } 1/A \mathrm{~[1 / \mu m^{2}]}\]",
+#     ylabel=r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]",
+#     tooltips=TOOLTIPS,
+#     plot_mean=True,
+#     legend_loc="top_left",
+#     fit="line",
+#     show_in_browser=False,
+# )
 
 ### --- output R_N over 1/Area --- ###
 p_R_N_invA_corr2 = plot_marker_for_chips(
@@ -882,20 +882,20 @@ p_R_N_invA_corr2 = plot_marker_for_chips(
 
 
 ### --- output 1/R_N over Area --- ###
-p_invR_N_A_corr1 = plot_marker_for_chips(
-    html_name="normal_resistances_invR_N_corr1.html",
-    title="Inverted Normal Resistance over Area, corrected area, Approach 1",
-    xlist=["A", "A_corr1"],
-    ylist=["1_over_R_N", "1_over_R_N"],
-    fillcolorlist=["same", None],
-    xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
-    ylabel=r"\[\text{Inverse Normal Resistance } 1/R_N \mathrm{~[1/ \Omega ]}\]",
-    tooltips=TOOLTIPS,
-    plot_mean=True,
-    legend_loc="top_left",
-    fit="line",
-    show_in_browser=False,
-)
+# p_invR_N_A_corr1 = plot_marker_for_chips(
+#     html_name="normal_resistances_invR_N_corr1.html",
+#     title="Inverted Normal Resistance over Area, corrected area, Approach 1",
+#     xlist=["A", "A_corr1"],
+#     ylist=["1_over_R_N", "1_over_R_N"],
+#     fillcolorlist=["same", None],
+#     xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
+#     ylabel=r"\[\text{Inverse Normal Resistance } 1/R_N \mathrm{~[1/ \Omega ]}\]",
+#     tooltips=TOOLTIPS,
+#     plot_mean=True,
+#     legend_loc="top_left",
+#     fit="line",
+#     show_in_browser=False,
+# )
 ### --- output 1/R_N over Area --- ###
 p_invR_N_A_corr2 = plot_marker_for_chips(
     html_name="normal_resistances_invR_N_corr2.html",
