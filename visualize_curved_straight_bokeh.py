@@ -63,14 +63,20 @@ print()
 print("Junctions ISweep Filtered Out:")
 print(junctions_Isweep_filtered_out_df.to_string())
 
+junctions_Isweep_df["filtered"] = False
+junctions_Isweep_filtered_out_df["filtered"] = True
+total_df = pd.concat([junctions_Isweep_df[junctions_Isweep_filtered_out_df.columns], junctions_Isweep_filtered_out_df])
+print(total_df.to_string())
+
 MARKER_LIST = ["diamond", "hex", "inverted_triangle", "plus", "square", "star", "triangle"]
 
 
 def plot_marker_for_chips(html_name: str, title: str, x: str, y: str, xlabel: str, ylabel: str, tooltips: list, legend_loc="top_left",
                           annotation_text=None, annotation_pos=None, show_in_browser=True):
-    source = ColumnDataSource(junctions_Isweep_df)
-    source_filtered_out = ColumnDataSource(junctions_Isweep_filtered_out_df)
-    chip_names = list(set(junctions_Isweep_df["chip_name"].unique()) | set(junctions_Isweep_filtered_out_df["chip_name"].unique()))
+    source = ColumnDataSource(total_df)
+    # source_filtered_out = ColumnDataSource(junctions_Isweep_filtered_out_df)
+    # chip_names = list(set(junctions_Isweep_df["chip_name"].unique()) | set(junctions_Isweep_filtered_out_df["chip_name"].unique()))
+    chip_names = list(total_df["chip_name"].unique())
 
     OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "comp", html_name)
     output_file(filename=OUTPUT_FILEPATH)
@@ -78,17 +84,23 @@ def plot_marker_for_chips(html_name: str, title: str, x: str, y: str, xlabel: st
     p = figure(x_range=["short", "long"], title=title, width=1000, height=600, tooltips=tooltips)
     for m, chip_name in enumerate(chip_names):
         filter_chip = GroupFilter(column_name="chip_name", group=chip_name)
-        view = CDSView(filter=filter_chip)
 
-        chip_df = junctions_Isweep_df[junctions_Isweep_df["chip_name"] == chip_name]
-        chip_filtered_out_df = junctions_Isweep_filtered_out_df[junctions_Isweep_filtered_out_df["chip_name"]==chip_name]
+        chip_df = total_df[total_df["chip_name"] == chip_name]
+        # chip_filtered_out_df = junctions_Isweep_filtered_out_df[junctions_Isweep_filtered_out_df["chip_name"]==chip_name]
         # plot points with different marker for every chip 
-        if not chip_df.empty:
+        if not chip_df[chip_df["filtered"] == False].empty:
+            print("Test1")
+            filter_bool = BooleanFilter(list(~total_df["filtered"]))
+            print(filter_bool)
+            view = CDSView(filter=(filter_chip & filter_bool))
             p.scatter(source=source, x=x, y=y, legend_label=f"{chip_name}", view=view, size=10, line_color=line_color, fill_color=None, marker=MARKER_LIST[m])
 
         # plot points that were filtered out muted
-        if not chip_filtered_out_df.empty:
-            p.scatter(source=source_filtered_out, x=x, y=y, legend_label=f"{chip_name}, filtered out", view=view, size=10, line_alpha=0.4, fill_alpha=0.4, line_color=line_color, fill_color=None, marker=MARKER_LIST[m])
+        if not chip_df[chip_df["filtered"] == True].empty:
+            print("Test2")
+            filter_bool = BooleanFilter(list(total_df["filtered"]))
+            view = CDSView(filter=(filter_chip & filter_bool))
+            p.scatter(source=source, x=x, y=y, legend_label=f"{chip_name}, filtered out", view=view, size=10, line_alpha=0.4, fill_alpha=0.4, line_color=line_color, fill_color=None, marker=MARKER_LIST[m])
 
     if annotation_text:
         if annotation_pos == "bottom_left":
@@ -151,12 +163,12 @@ p_j_c = plot_marker_for_chips(
     html_name="critical_current_densities.html",
     title="Comparison Critical Current Densities, Corrected Area",
     x="type",
-    y="j_c_corr2",
+    y="j_c_corr2_Ic",
     xlabel=r"\[ \text{Feedline Type}\]",
     ylabel=r"\[ \text{Critical Current Density } j_c \mathrm{~[A/cm^2]} \]",
     tooltips=TOOLTIPS,
     legend_loc="top_left",
-    annotation_text=f"$$\Delta W = {Float(junctions_Isweep_df['deltaW_corr2'].iloc[0]*10**(-6)):.2h}m$$",
+    annotation_text=f"$$\Delta W = {Float(junctions_Isweep_df['deltaW_corr2_Ic'].iloc[0]*10**(-6)):.2h}m$$",
     annotation_pos="bottom_right",
     show_in_browser=True,
 )

@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from numpy.polynomial import Polynomial
 from scipy.optimize import curve_fit
 import os
 from prefixed import Float
