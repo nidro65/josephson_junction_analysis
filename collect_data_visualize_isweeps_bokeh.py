@@ -13,6 +13,7 @@ from bokeh.colors import RGB
 MARKER_LIST = ["diamond", "hex", "inverted_triangle", "plus", "square", "star", "triangle"]
 MEAN_MARKER_LIST = ["x", "asterisk", "cross", "y"]
 DASH_STYLES = ["solid", "dashed", "dotted", "dotdash", "dashdot"]
+CHIP_NAMES = ["AJ08", "AJ09", "AL08", "AI08"]
 
 dirnames = [
     "01_NanoPr_w13_chipAJ08",
@@ -104,6 +105,10 @@ for filename, filepaths in merge_files_dict.items():
     junction_area_um = junction_width * junction_length
     junction_area_cm = junction_area_um * 10**(-8)
     device_type = match.groups()[3] # None for single junction, "array" for Array
+    if device_type == "straight":
+        device_type = "long"
+    elif device_type == "curved":
+        device_type = "short"
     temperature = float(f"{match.groups()[4]}.{match.groups()[5]}")
     measurement_type = match.groups()[6]
     print(f"Measurement: {measurement_type} on Channel {channel_number} at {temperature}K")
@@ -319,7 +324,10 @@ for filename, filepaths in merge_files_dict.items():
     output_file(filename=OUTPUT_FILEPATH)
 
     # create a new plot with a title and axis labels
-    title = f"{filename}, Wafer: w{wafer_num}, Chip: {chip_name}"
+    # title = f"Josephson Junction {junction_width}x{junction_length} {device_type} feedline, Wafer: w{wafer_num}, Chip: {chip_name}, T={temperature}"
+    title_txt = f"Josephson Junction {junction_width}x{junction_length} {device_type} feedline, Wafer: w{wafer_num}, Chip: {chip_name}, "
+    temp_txt = f"T={temperature}"
+    title  = r"\[\text{" + title_txt + r"} " + temp_txt + r"\mathrm{K}\]"
     p = figure(title=title, width=1000, height=600)  # , sizing_mode="stretch_both")
 
     # add a line renderer with legend and line thickness

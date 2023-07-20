@@ -201,8 +201,8 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
     output_file(filename=OUTPUT_FILEPATH)
 
     p = figure(title=title, width=1000, height=600, tooltips=tooltips)
-    filter_curved=GroupFilter(column_name="type", group="curved")
-    filter_straight=GroupFilter(column_name="type", group="straight")
+    filter_short=GroupFilter(column_name="type", group="short")
+    filter_long=GroupFilter(column_name="type", group="long")
     for i, x in enumerate(xlist):
         if "corr" in x or "corr" in ylist[i]:
             # corrected_str = ", corrected area"
@@ -215,45 +215,45 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
             chip_df = junctions_Isweep_df[junctions_Isweep_df["chip_name"] == chip_name]
             chip_filtered_out_df = junctions_Isweep_filtered_out_df[junctions_Isweep_filtered_out_df["chip_name"]==chip_name]
 
-            ### long feedlines
+            ### short feedlines
             # plot points with different marker for every chip 
-            if not chip_df[chip_df["type"] == "curved"].empty:
-                view = CDSView(filter=(filter_curved & filter_chip))
+            if not chip_df[chip_df["type"] == "short"].empty:
+                view = CDSView(filter=(filter_short & filter_chip))
                 if fillcolorlist[i] == "same":
                     fillcolor = "blue"
                 else:
                     fillcolor = fillcolorlist[i]
-                p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}", view=view, size=10, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
+                p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}", view=view, size=10, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
 
             # plot points that were filtered out muted
             # if not "corr" in x and not "corr" in ylist[i]:
-            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "curved"].empty:
-                view = CDSView(filter=(filter_curved & filter_chip))
+            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "short"].empty:
+                view = CDSView(filter=(filter_short & filter_chip))
                 if fillcolorlist[i] == "same":
                     fillcolor = "blue"
                 else:
                     fillcolor = fillcolorlist[i]
-                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
+                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
 
-            ### short feedlines
+            ### long feedlines
             # plot points with different marker for every chip 
-            if not chip_df[chip_df["type"] == "straight"].empty:
-                view = CDSView(filter=(filter_straight & filter_chip))
+            if not chip_df[chip_df["type"] == "long"].empty:
+                view = CDSView(filter=(filter_long & filter_chip))
                 if fillcolorlist[i] == "same":
                     fillcolor = "red"
                 else:
                     fillcolor = fillcolorlist[i]
-                p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}", view=view, size=10, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
+                p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}", view=view, size=10, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
             
             # plot points that were filtered out muted
             # if not "corr" in x and not "corr" in ylist[i]:
-            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "straight"].empty:
-                view = CDSView(filter=(filter_straight & filter_chip))
+            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "long"].empty:
+                view = CDSView(filter=(filter_long & filter_chip))
                 if fillcolorlist[i] == "same":
                     fillcolor = "red"
                 else:
                     fillcolor = fillcolorlist[i]
-                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
+                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
     
             min_x = chip_df[x].min() if min_x > chip_df[x].min() else min_x
             max_x = chip_df[x].max() if max_x < chip_df[x].max() else max_x
@@ -262,9 +262,6 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                 max_x = chip_filtered_out_df[x].max() if max_x < chip_filtered_out_df[x].max() else max_x
 
     
-    # p.circle(source=source, x="A_corr1", y="j_c_corr1",legend_label = "Long Feedline (corrected area)", view=view_curved, size=10, line_color="blue", fill_color=None)
-    # p.circle(source=source, x="A_corr1", y="j_c_corr1",legend_label = "Short Feedline (corrected area)" ,view=view_straight, size=10, line_color="red", fill_color=None)
-
     if plot_mean:
         for i, x in enumerate(xlist):
             p.scatter(source=source_mean, x=x, y=ylist[i],legend_label = f"Mean {ylist[i]}", size=10, color="black", marker=MEAN_MARKER_LIST[i])
@@ -355,7 +352,7 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
 ### --- J_C over Area ---
 p_j_c = plot_marker_for_chips(
     html_name="critical_current_densities.html",
-    title="Critical Current Densities",
+    title=r"\[\text{Critical Current Densities}\]",
     xlist=["A"],
     ylist=["j_c"],
     fillcolorlist=["same", None],
@@ -383,7 +380,7 @@ p_j_c = plot_marker_for_chips(
 
 p_j_c_corr2 = plot_marker_for_chips(
     html_name="critical_current_densities_corrected_area_2.html",
-    title="Critical Current Densities, Area Correction with Critical Current",
+    title=r"\[\text{Critical Current Densities, Area Correction with Critical Current}\]",
     xlist=["A", "A_corr2_Ic"],
     ylist=["j_c", "j_c_corr2_Ic"],
     fillcolorlist=["same", None],
@@ -412,7 +409,7 @@ annot_str  =f"$$j_c = {j_c_corr2_2:.2f}A/cm^2,~\Delta W = {Float(deltaW_corr2_2*
 
 p_I_c = plot_marker_for_chips(
     html_name="critical_currents.html",
-    title="Critical Currents",
+    title=r"\[\text{Critical Currents}\]",
     xlist=["A"],
     ylist=["I_c_mean"],
     fillcolorlist=["same"],
@@ -460,7 +457,7 @@ p_I_c = plot_marker_for_chips(
 fit_params = []
 p_I_c_A_corr2 = plot_marker_for_chips(
     html_name="critical_currents_corrected_area_2.html",
-    title="Critical Currents, Area Correction with Critical Current",
+    title=r"\[\text{Critical Currents, Area Correction with Critical Current}\]",
     xlist=["A", "A_corr2_Ic"],
     ylist=["I_c_mean", "I_c_mean"],
     fillcolorlist=["same", None],
@@ -514,7 +511,7 @@ print(fit_params)
 ### --- output R_N over 1/Area --- ###
 p_R_N_invA_corr2 = plot_marker_for_chips(
     html_name="normal_resistances_invA_corr2.html",
-    title="Normal Resistance over Inverted Area, Area Correction with Critical Current",
+    title=r"\[\text{Normal Resistance over Inverted Area, Area Correction with Critical Current}\]",
     xlist=["1_over_A", "1_over_A_corr2_Ic"],
     ylist=["R_N", "R_N"],
     fillcolorlist=["same", None],
@@ -546,7 +543,7 @@ p_R_N_invA_corr2 = plot_marker_for_chips(
 ### --- output 1/R_N over Area --- ###
 p_invR_N_A_corr2 = plot_marker_for_chips(
     html_name="normal_resistances_invR_N_corr2.html",
-    title="Inverted Normal Resistance over Area, Area Correction with Normal Resistance",
+    title=r"\[\text{Inverted Normal Resistance over Area, Area Correction with Normal Resistance}\]",
     xlist=["A", "A_corr2_Rn"],
     ylist=["1_over_R_N", "1_over_R_N"],
     fillcolorlist=["same", None],
@@ -561,154 +558,6 @@ p_invR_N_A_corr2 = plot_marker_for_chips(
     annotation_pos="bottom_right",
     show_in_browser=True,
 )
-# annotations:
-# annotation1 = Label(x=40, y=40, x_units='screen', y_units='screen',
-#                  text=f"$$T_c = {popt[0]:.2f}K,~~\Delta_0 = {Float(popt[1]):.2h}eV$$")
-
-
-
-
-# source = ColumnDataSource(junctions_Isweep_df)
-# source_mean = ColumnDataSource(junctions_mean_df)
-
-# OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "normal_resistances_invA.html")
-# output_file(filename=OUTPUT_FILEPATH)
-
-# TOOLTIPS_R_N_INV_A = [
-#     # ("index", "$index"),
-#     ("measurement", "@meas"),
-#     ("T", "@T"),
-#     ("j_c", "@j_c"),
-#     ("R_sg/R_N", "@R_sg_R_N"),
-#     ("I_C*R_N", "@I_c_R_N"),
-#     ("A corrected", "@A_corr1"),
-# ]
-# p_R_N_invA = figure(title="Normal Resistances", sizing_mode="stretch_both", tooltips=TOOLTIPS_R_N_INV_A)
-# view_curved = CDSView(filter=GroupFilter(column_name="type", group="curved"))
-# view_straight = CDSView(filter=GroupFilter(column_name="type", group="straight"))
-# p_R_N_invA.circle(source=source, x="1_over_A", y="R_N",legend_label = "Long Feedline", view=view_curved, size=10, color="blue")
-# p_R_N_invA.circle(source=source, x="1_over_A", y="R_N",legend_label = "Short Feedline" ,view=view_straight, size=10, color="red")
-# p_R_N_invA.scatter(source=source_mean, x="1_over_A", y="R_N",legend_label = "Mean Values", size=10, color="black", marker="x")
-# p_R_N_invA.asterisk(source=source_mean, x="1_over_A_corr1", y="R_N",legend_label = "Corrected Mean Values", size=10, color="black")
-
-
-# # TODO fit thru 0 intercept point, read out asymptot for bests guess rho_0
-
-# x = junctions_Isweep_df["1_over_A"].to_numpy()
-# x = x[:,np.newaxis]
-# x_range = [0, x.max()]
-# # print(x_range)
-# y = np.array(junctions_Isweep_df["R_N"])
-# rho_fitted, _, _, _ = np.linalg.lstsq(x, y, rcond=None)
-# p_R_N_invA.line(x=x_range, y=rho_fitted*x_range, legend_label = "1/x Fit", color="black", line_dash="dashed")
-# print(f"Fitted specific resistance {rho_fitted}")
-
-# # x = junctions_Isweep_df["A"].to_numpy()
-# # x = x[:,np.newaxis]
-# # y = np.array(junctions_Isweep_df["1_over_R_N"])
-# # rho_fitted, _, _, _ = np.linalg.lstsq(x, y, rcond=None)
-# # p_R_N_invA.line(x=junctions_Isweep_df["A"], y=rho_fitted*junctions_Isweep_df["A"], legend_label = "Linear Fit", color="black", line_dash="dotted")
-# # print(f"Fitted specific resistance {rho_fitted}")
-
-# # coeff_R_N_over_invA = np.polyfit(junctions_mean_df["1_over_A"], junctions_mean_df["R_N"], 1)
-# # poly1d_fn_R_N_over_invA = np.poly1d(coeff_R_N_over_invA)
-# # p_R_N_invA.line(x=junctions_mean_df["1_over_A"], y=poly1d_fn_R_N_over_invA(junctions_mean_df["1_over_A"]), legend_label = "1/x Mean Fit", color="black")
-
-# # coeff_R_N_over_invCorrA = np.polyfit(junctions_mean_df["1_over_A_corr1"], junctions_mean_df["R_N"], 1)
-# # poly1d_fn_R_N_over_invCorrA = np.poly1d(coeff_R_N_over_invCorrA)
-# # p_R_N_invA.line(x=junctions_mean_df["1_over_A_corr1"], y=poly1d_fn_R_N_over_invCorrA(junctions_mean_df["1_over_A_corr1"]), legend_label = "1/x Mean Fit area corrected", color="black", line_dash="dashed")
-
-# # legend
-# p_R_N_invA.legend.location = "top_left"
-# p_R_N_invA.legend.click_policy="hide"
-# # x-axis
-# p_R_N_invA.xaxis.axis_label = r"\[\text{Inverse Junction Area } 1/A \mathrm{~[1 / \mu m^{2}]}\]"
-# p_R_N_invA.xaxis.axis_label_text_font_size = font_size_axis
-# p_R_N_invA.xaxis.axis_label_text_font_style = font_style_axis
-# p_R_N_invA.xaxis.major_label_text_font_size = font_size_major_ticks
-# p_R_N_invA.x_range.start = 0
-# # y-axis
-# p_R_N_invA.yaxis.axis_label = r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]"
-# p_R_N_invA.yaxis.axis_label_text_font_size = font_size_axis
-# p_R_N_invA.yaxis.axis_label_text_font_style = font_style_axis
-# p_R_N_invA.yaxis.major_label_text_font_size = font_size_major_ticks
-# # title
-# p_R_N_invA.title.text_font_size = font_size_title
-# p_R_N_invA.title.text_font_style = font_style_title
-
-# save(p_R_N_invA)
-
-# ### --- output R_N over 1/Area --- ###
-# source = ColumnDataSource(junctions_Isweep_df)
-# source_mean = ColumnDataSource(junctions_mean_df)
-
-# OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "normal_resistances_invR_N.html")
-# output_file(filename=OUTPUT_FILEPATH)
-
-# TOOLTIPS_INV_R_N_A = [
-#     # ("index", "$index"),
-#     ("measurement", "@meas"),
-#     ("T", "@T"),
-#     ("j_c", "@j_c"),
-#     ("R_sg/R_N", "@R_sg_R_N"),
-#     ("I_C*R_N", "@I_c_R_N"),
-#     ("A corrected", "@A_corr1"),
-# ]
-# p_invR_N_A = figure(title="Normal Resistances", sizing_mode="stretch_both", tooltips=TOOLTIPS_INV_R_N_A)
-# view_curved = CDSView(filter=GroupFilter(column_name="type", group="curved"))
-# p_invR_N_A.circle(source=source, x="A", y="1_over_R_N",legend_label = "Long Feedline", view=view_curved, size=10, color="blue")
-# view_straight = CDSView(filter=GroupFilter(column_name="type", group="straight"))
-# p_invR_N_A.circle(source=source, x="A", y="1_over_R_N",legend_label = "Short Feedline" ,view=view_straight, size=10, color="red")
-# p_invR_N_A.scatter(source=source_mean, x="A", y="1_over_R_N",legend_label = "Mean Values", size=10, color="black", marker="x")
-# # p_invR_N_A.asterisk(source=source_mean, x="1_over_A_corr1", y="corrR_N",legend_label = "Corrected Mean Values", size=10, color="black")
-
-
-
-# coeff_R_N_1 = np.polyfit(junctions_Isweep_df["A"], junctions_Isweep_df["1_over_R_N"], 1)
-# poly1d_fn_R_N_1 = np.poly1d(coeff_R_N_1)
-# As = np.arange(-1, junctions_Isweep_df["A"].max(), 1)
-# p_invR_N_A.line(x=As, y=poly1d_fn_R_N_1(As), legend_label = "Linear Fit", color="black") #, line_dash="dotted")
-
-# # coeff_R_N_1 = np.polyfit(junctions_Isweep_df["1_over_A"], junctions_Isweep_df["R_N"], 1)
-# # poly1d_fn_R_N_1 = np.poly1d(coeff_R_N_1)
-# # p_invR_N_A.line(x=junctions_Isweep_df["1_over_A"], y=poly1d_fn_R_N_1(junctions_Isweep_df["1_over_A"]), legend_label = "1/x Fit", color="black", line_dash="dotted")
-
-# # coeff_R_N_over_invA = np.polyfit(junctions_mean_df["1_over_A"], junctions_mean_df["R_N"], 1)
-# # poly1d_fn_R_N_over_invA = np.poly1d(coeff_R_N_over_invA)
-# # p_invR_N_A.line(x=junctions_mean_df["1_over_A"], y=poly1d_fn_R_N_over_invA(junctions_mean_df["1_over_A"]), legend_label = "1/x Mean Fit", color="black")
-
-# # coeff_R_N_over_invCorrA = np.polyfit(junctions_mean_df["1_over_A_corr1"], junctions_mean_df["R_N"], 1)
-# # poly1d_fn_R_N_over_invCorrA = np.poly1d(coeff_R_N_over_invCorrA)
-# # p_invR_N_A.line(x=junctions_mean_df["1_over_A_corr1"], y=poly1d_fn_R_N_over_invCorrA(junctions_mean_df["1_over_A_corr1"]), legend_label = "1/x Mean Fit area corrected", color="black", line_dash="dashed")
-
-
-# annotation1 = Label(x=40, y=40, x_units='screen', y_units='screen',
-#                  text=f"$$T_c = {popt[0]:.2f}K,~~\Delta_0 = {Float(popt[1]):.2h}eV$$")
-
-# # annotation2 = Label(x=40, y=60, x_units='screen', y_units='screen',
-# #                  text="$$\dfrac{\Delta (T)}{\Delta (0)} \simeq \left[ 1-\left(\dfrac{T}{T_c}\right)^{4}\right]^{2/3}$$")
-
-# p_invR_N_A.add_layout(annotation1)
-
-# # legend
-# p_invR_N_A.legend.location = "top_left"
-# p_invR_N_A.legend.click_policy="hide"
-# # x-axis
-# p_invR_N_A.xaxis.axis_label = r"\[\text{Junction Area } A \mathrm{~[\mu m^{2}]}\]"
-# p_invR_N_A.xaxis.axis_label_text_font_size = font_size_axis
-# p_invR_N_A.xaxis.axis_label_text_font_style = font_style_axis
-# p_invR_N_A.xaxis.major_label_text_font_size = font_size_major_ticks
-# p_invR_N_A.x_range.start = 0
-# # y-axis
-# p_invR_N_A.yaxis.axis_label = r"\[\text{Inverse Normal Resistance } 1/R_N \mathrm{~[1/ \Omega ]}\]"
-# p_invR_N_A.yaxis.axis_label_text_font_size = font_size_axis
-# p_invR_N_A.yaxis.axis_label_text_font_style = font_style_axis
-# p_invR_N_A.yaxis.major_label_text_font_size = font_size_major_ticks
-# # title
-# p_invR_N_A.title.text_font_size = font_size_title
-# p_invR_N_A.title.text_font_style = font_style_title
-
-# show(p_invR_N_A)
 
 ### --- output R_N over Area --- ###
 source = ColumnDataSource(junctions_Isweep_df)
@@ -726,11 +575,11 @@ TOOLTIPS_R_N = [
     ("I_C*R_N", "@I_c_R_N"),
     ("A corrected", "@A_corr1"),
 ]
-p_R_N = figure(title="Normal Resistances", width=1000, height=600, tooltips=TOOLTIPS_R_N)
-view_curved = CDSView(filter=GroupFilter(column_name="type", group="curved"))
-view_straight = CDSView(filter=GroupFilter(column_name="type", group="straight"))
-p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Long Feedline", view=view_curved, size=10, color="blue")
-p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Short Feedline" ,view=view_straight, size=10, color="red")
+p_R_N = figure(title=r"\[\text{Normal Resistances}\]", width=1000, height=600, tooltips=TOOLTIPS_R_N)
+view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
+view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
+p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
+p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
 p_R_N.scatter(source=source_mean, x="A", y="R_N",legend_label = "Mean Values", size=10, color="black", marker="x")
 p_R_N.asterisk(source=source_mean, x="A_corr1", y="R_N",legend_label = "Corrected Mean Values", size=10, color="black")
 
@@ -824,11 +673,11 @@ TOOLTIPS_J_C_T = [
     ("R_sg/R_N", "@R_sg_R_N"),
     ("I_C*R_N", "@I_c_R_N")
 ]
-p_j_c_T = figure(title="Critical Current Density over Temperature", width=1000, height=600, tooltips=TOOLTIPS_J_C_T)
-view_curved = CDSView(filter=GroupFilter(column_name="type", group="curved"))
-p_j_c_T.circle(source=source_temp, x="T", y="j_c",legend_label = "Curved Feedline", view=view_curved, size=10, color="blue")
-view_straight = CDSView(filter=GroupFilter(column_name="type", group="straight"))
-p_j_c_T.circle(source=source_temp, x="T", y="j_c",legend_label = "Straight Feedline" ,view=view_straight, size=10, color="red")
+p_j_c_T = figure(title=r"\[\text{Critical Current Density over Temperature}\]", width=1000, height=600, tooltips=TOOLTIPS_J_C_T)
+view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
+p_j_c_T.circle(source=source_temp, x="T", y="j_c",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
+view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
+p_j_c_T.circle(source=source_temp, x="T", y="j_c",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
 
 # legend
 p_j_c_T.legend.location = "top_left"
@@ -876,12 +725,12 @@ TOOLTIPS_V_G_T = [
 
 
 # plotting
-p_V_g_T = figure(title="Gap Voltage over Temperature", width=1000, height=600) #, tooltips=TOOLTIPS_V_G_T)
-view_curved = CDSView(filter=GroupFilter(column_name="type", group="curved"))
-view_straight = CDSView(filter=GroupFilter(column_name="type", group="straight"))
-circ_curved = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Curved Feedline", view=view_curved, size=10, color="blue")
-circ_straight = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Straight Feedline" ,view=view_straight, size=10, color="red")
-circ_hover_tool = HoverTool(renderers=[circ_curved, circ_straight], tooltips=TOOLTIPS_V_G_T)
+p_V_g_T = figure(title=r"\[\text{Gap Voltage over Temperature}\]", width=1000, height=600) #, tooltips=TOOLTIPS_V_G_T)
+view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
+view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
+circ_short = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
+circ_long = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
+circ_hover_tool = HoverTool(renderers=[circ_short, circ_long], tooltips=TOOLTIPS_V_G_T)
 p_V_g_T.add_tools(circ_hover_tool)
 
 # curve fits:

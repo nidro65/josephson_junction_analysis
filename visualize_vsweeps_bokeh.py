@@ -172,9 +172,26 @@ for device_str in data:
                 output_file(filename=OUTPUT_FILEPATH)
 
                 print(f"filename: {filename}, output_path: {OUTPUT_FILEPATH}")
-                print(f"filepath: {filepath}")
-                title = f"{filename}, Wafer: {device_str.split('_')[0]}, Chip: {device_str.split('_')[1]}"
+                # print(f"filepath: {filepath}")
+                # title = f"{filename}, Wafer: {device_str.split('_')[0]}, Chip: {device_str.split('_')[1]}"
 
+                match = re.match(r"^CH(\d+)\_JJ(\d+)x(\d+)\_?([^_]+)?\_T(\d+)p(\d+)K_(.+)$", filename)
+                # print(match.groups())
+                ch_nmb = int(match.groups()[0])
+                junction_width = int(match.groups()[1])  # micrometer   TODO length or width?
+                junction_length = int(match.groups()[2])  # micrometer
+                junction_area_um = junction_width * junction_length
+                junction_area_cm = junction_area_um * 10**(-8)
+                device_type = match.groups()[3] # None for single junction, "array" for Array
+                if device_type == "straight":
+                    device_type = "long"
+                elif device_type == "curved":
+                    device_type = "short"
+                temperature = float(f"{match.groups()[4]}.{match.groups()[5]}")
+                meas_type = match.groups()[6]
+                title_txt = f"Josephson Junction {junction_width}x{junction_length} {device_type} feedline, Wafer: {device_str.split('_')[0]}, Chip: {device_str.split('_')[1]}, "
+                temp_txt = f"T={temperature}"
+                title  = r"\[\text{" + title_txt + r"} " + temp_txt + r"\mathrm{K}\]"
                 # create a new plot with a title and axis labels
                 p = figure(title=title, width=1000, height=600)
 

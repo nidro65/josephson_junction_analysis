@@ -52,10 +52,10 @@ OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "junction_isweep_filtered_out_data.cs
 with open(OUTPUT_FILEPATH, "r") as file:
     junctions_Isweep_filtered_out_df = pd.read_csv(file)
 
-junctions_Isweep_df["type"] = junctions_Isweep_df["type"].str.replace("curved", "long")
-junctions_Isweep_df["type"] = junctions_Isweep_df["type"].str.replace("straight", "short")
-junctions_Isweep_filtered_out_df["type"] = junctions_Isweep_filtered_out_df["type"].str.replace("curved", "long")
-junctions_Isweep_filtered_out_df["type"] = junctions_Isweep_filtered_out_df["type"].str.replace("straight", "short")
+# junctions_Isweep_df["type"] = junctions_Isweep_df["type"].str.replace("curved", "long")
+# junctions_Isweep_df["type"] = junctions_Isweep_df["type"].str.replace("straight", "short")
+# junctions_Isweep_filtered_out_df["type"] = junctions_Isweep_filtered_out_df["type"].str.replace("curved", "long")
+# junctions_Isweep_filtered_out_df["type"] = junctions_Isweep_filtered_out_df["type"].str.replace("straight", "short")
 
 print("Junctions ISweep:")
 print(junctions_Isweep_df.to_string())
@@ -69,6 +69,7 @@ total_df = pd.concat([junctions_Isweep_df[junctions_Isweep_filtered_out_df.colum
 print(total_df.to_string())
 
 MARKER_LIST = ["diamond", "hex", "inverted_triangle", "plus", "square", "star", "triangle"]
+CHIP_NAMES = ["AJ08", "AJ09", "AL08", "AI08"]
 
 
 def plot_marker_for_chips(html_name: str, title: str, x: str, y: str, xlabel: str, ylabel: str, tooltips: list, legend_loc="top_left",
@@ -76,28 +77,24 @@ def plot_marker_for_chips(html_name: str, title: str, x: str, y: str, xlabel: st
     source = ColumnDataSource(total_df)
     # source_filtered_out = ColumnDataSource(junctions_Isweep_filtered_out_df)
     # chip_names = list(set(junctions_Isweep_df["chip_name"].unique()) | set(junctions_Isweep_filtered_out_df["chip_name"].unique()))
-    chip_names = list(total_df["chip_name"].unique())
+    # chip_names = list(total_df["chip_name"].unique())
 
     OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "comp", html_name)
     output_file(filename=OUTPUT_FILEPATH)
 
-    p = figure(x_range=["short", "long"], title=title, width=1000, height=600, tooltips=tooltips)
-    for m, chip_name in enumerate(chip_names):
+    p = figure(x_range=["long", "short"], title=title, width=1000, height=600, tooltips=tooltips)
+    for m, chip_name in enumerate(CHIP_NAMES):
         filter_chip = GroupFilter(column_name="chip_name", group=chip_name)
 
         chip_df = total_df[total_df["chip_name"] == chip_name]
-        # chip_filtered_out_df = junctions_Isweep_filtered_out_df[junctions_Isweep_filtered_out_df["chip_name"]==chip_name]
         # plot points with different marker for every chip 
         if not chip_df[chip_df["filtered"] == False].empty:
-            print("Test1")
             filter_bool = BooleanFilter(list(~total_df["filtered"]))
-            print(filter_bool)
             view = CDSView(filter=(filter_chip & filter_bool))
             p.scatter(source=source, x=x, y=y, legend_label=f"{chip_name}", view=view, size=10, line_color=line_color, fill_color=None, marker=MARKER_LIST[m])
 
         # plot points that were filtered out muted
         if not chip_df[chip_df["filtered"] == True].empty:
-            print("Test2")
             filter_bool = BooleanFilter(list(total_df["filtered"]))
             view = CDSView(filter=(filter_chip & filter_bool))
             p.scatter(source=source, x=x, y=y, legend_label=f"{chip_name}, filtered out", view=view, size=10, line_alpha=0.4, fill_alpha=0.4, line_color=line_color, fill_color=None, marker=MARKER_LIST[m])
@@ -161,7 +158,7 @@ TOOLTIPS = [
 ### --------- j_c ---------
 p_j_c = plot_marker_for_chips(
     html_name="critical_current_densities.html",
-    title="Comparison Critical Current Densities, Corrected Area",
+    title=r"\[\text{Comparison Critical Current Densities, Corrected Area}\]",
     x="type",
     y="j_c_corr2_Ic",
     xlabel=r"\[ \text{Feedline Type}\]",
@@ -176,7 +173,7 @@ p_j_c = plot_marker_for_chips(
 ### --------- V_g ---------
 p_V_g = plot_marker_for_chips(
     html_name="gap_voltage.html",
-    title="Comparison Gap Voltage",
+    title=r"\[\text{Comparison Gap Voltage}\]",
     x="type",
     y="V_g_mean",
     xlabel=r"\[ \text{Feedline Type}\]",
@@ -189,7 +186,7 @@ p_V_g = plot_marker_for_chips(
 ### --------- R_sg / R_N ---------
 p_Rsg_Rn = plot_marker_for_chips(
     html_name="R_sg_R_N.html",
-    title="Comparison Subgap to Normal Resistance",
+    title=r"\[\text{Comparison Subgap to Normal Resistance}\]",
     x="type",
     y="R_sg_R_N",
     xlabel=r"\[ \text{Feedline Type}\]",
@@ -202,11 +199,11 @@ p_Rsg_Rn = plot_marker_for_chips(
 ### --------- I_c * R_N ---------
 p_Ic_Rn = plot_marker_for_chips(
     html_name="I_c_R_N.html",
-    title="Comparison Ambegaokar-Baratoff Parameter",
+    title="\\[\\text{Comparison } I_c R_N \\text{ Product}\\]", #"Comparison I_c R_N Product",
     x="type",
     y="I_c_R_N",
     xlabel=r"\[ \text{Feedline Type}\]",
-    ylabel=r"\[ \text{Ambegaokar-Baratoff Parameter } I_c \cdot R_N \mathrm{~[V]} \]",
+    ylabel=r"\[ \text{Quality Factor } I_c R_N \mathrm{~[V]} \]",
     tooltips=TOOLTIPS,
     legend_loc="top_left",
     show_in_browser=True,
