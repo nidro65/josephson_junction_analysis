@@ -281,7 +281,7 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
             # p.asterisk(source=source_mean, x="A_corr1", y="j_c_corr1",legend_label = "corrected means", size=10, color="black")
 
 
-    print(f"Min: {min_x}, max: {max_x}")
+    # print(f"Min: {min_x}, max: {max_x}")
     if plot_range == "zero_max":
         x_range = np.arange(0,max_x*1.05,(max_x-0)/1000)
     elif plot_range == "min_max":
@@ -501,8 +501,8 @@ p_I_c_A_corr2 = plot_marker_for_chips(
     show_in_browser=True,
 )
 
-print(f"\nParams fit, deltaW={fit_params[0][0]}, j_C={fit_params[0][1]*10**(8)}")
-print(fit_params)
+# print(f"\nParams fit, deltaW={fit_params[0][0]}, j_C={fit_params[0][1]*10**(8)}")
+# print(fit_params)
 
 ### --- output specific R over Area --- ###
 # p_R_spec = plot_marker_for_chips(
@@ -567,6 +567,21 @@ p_R_N_invA_corr2 = plot_marker_for_chips(
 #     fit="line",
 #     show_in_browser=False,
 # )
+
+coeff = np.polyfit(junctions_Isweep_df["A"], junctions_Isweep_df["1_over_R_N"], 1)
+poly1d_fn = np.poly1d(coeff)
+x = 200
+x_W = x**0.5
+y = poly1d_fn(x)
+rho_0 = 1/coeff[0]
+dW = (rho_0 * y)**0.5 - x_W
+dA = rho_0*y - x
+print(f"\nNormal Line Fit for 1 over R_N:\nrho_0={1/coeff[0]}, intercept={coeff[1]}, deltaA={coeff[1]/coeff[0]}, deltaW={(abs(coeff[1]/coeff[0]))**0.5}")
+print(f"x: {x}, x_W={x_W}, y={y}, dA={dA}, dW={dW}")
+# poly1d_fn = np.poly1d(coeff)
+# # x_range = np.arange(0,this_df[x].max()*1.05, this_df[x].max()/100)
+# p.line(x=x_range, y=poly1d_fn(x_range), legend_label=f"Linear Fit {ylist[i]}{corrected_str}", color="black", line_dash=DASH_STYLES[i])
+
 ### --- output 1/R_N over Area --- ###
 p_invR_N_A_corr2 = plot_marker_for_chips(
     html_name="normal_resistances_invR_N_corr2.html",
@@ -581,7 +596,7 @@ p_invR_N_A_corr2 = plot_marker_for_chips(
     legend_loc="top_left",
     fit=fit_1_over_R_N,
     fit_params=[],
-    annotation_text=r"\[ \rho_{0,corr} = " + f"{rho_0_corr2_1:.2f}" + r"\Omega \cdot \mu m^2,~\Delta W = " + f"{Float(deltaW_corr2_1*10**(-6)):.2h}" + r"m \]",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
+    annotation_text=r"\[ \varrho_{0,corr} = " + f"{rho_0_corr2_1:.2f}" + r"\Omega \cdot \mu m^2,~\Delta W = " + f"{Float(deltaW_corr2_1*10**(-6)):.2h}" + r"m \]",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
     annotation_pos="bottom_right",
     show_in_browser=True,
 )
