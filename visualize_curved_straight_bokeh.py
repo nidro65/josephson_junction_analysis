@@ -208,3 +208,44 @@ p_Ic_Rn = plot_marker_for_chips(
     legend_loc="top_left",
     show_in_browser=True,
 )
+
+### ----- calculate mean values and standard deviations -----
+keys = ["type", "j_c_corr2_Ic", "V_g_mean", "R_sg_R_N", "I_c_R_N"]
+means_df = junctions_Isweep_df[keys].groupby("type").mean()
+stds_df = junctions_Isweep_df[keys].groupby("type").std()
+
+print("means df:")
+print(means_df.to_string())
+print()
+print("stds_df:")
+print(stds_df.to_string())
+
+mean_sub_df = means_df.loc["short"] - means_df.loc["long"]
+print("subs of means")
+print(mean_sub_df.to_string())
+
+print("length of variances")
+std_length_df = (stds_df.loc["short"]**2 + stds_df.loc["long"]**2)**0.5
+print(std_length_df.to_string())
+
+significance_test_df = mean_sub_df.abs() / std_length_df
+print("significance_test_df")
+print(significance_test_df.to_string())
+
+
+#
+# s^2 = 1/(N-1) * SUM((x_i - x_mean)^2)
+print("\nTest j_c_corr2_Ic:")
+for typ in junctions_Isweep_df["type"].unique():
+    x_diff = junctions_Isweep_df.loc[junctions_Isweep_df["type"]==typ, "j_c_corr2_Ic"] - means_df.loc[typ, "j_c_corr2_Ic"]
+    # print(x_diff)
+    x_diff_square = x_diff**2
+    # print(x_diff_square)
+    N = x_diff_square.count()
+    sum_x_diff = x_diff_square.sum()
+    # print(sum_x_diff)
+    # print(N)
+    s_square = sum_x_diff / (N - 1)
+    # print(s_square)
+    s = s_square**0.5
+    print(f"Type: {typ}, standard deviation: {s:.4f}")
