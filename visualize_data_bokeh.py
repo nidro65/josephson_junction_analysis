@@ -12,6 +12,7 @@ from bokeh.colors import RGB
 MARKER_LIST = ["diamond", "hex", "inverted_triangle", "plus", "square", "star", "triangle"]
 MEAN_MARKER_LIST = ["x", "asterisk", "cross", "y"]
 DASH_STYLES = ["solid", "dashed", "dotted", "dotdash", "dashdot"]
+CHIP_NAMES = ["AJ08", "AJ09", "AL08", "AI08"]
 
 dirnames = [
     "01_NanoPr_w13_chipAJ08",
@@ -57,6 +58,9 @@ line_width = 2.5
 OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "junction_data.csv")
 with open(OUTPUT_FILEPATH, "r") as file:
     junctions_df = pd.read_csv(file)
+
+# junctions_df = junctions_df[junctions_df["R_sg_R_N"]>10]  # filter out to low ratios of R_sg / R_N
+# junctions_df = junctions_df[junctions_df["I_c_R_N"]>0.6e-3]  # filter out to low ratios ofI_c * R_N
 
 # process and plot data with bokeh
 
@@ -188,11 +192,16 @@ TOOLTIPS = [
 ]
 
 def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, fillcolorlist: list, xlabel: str, ylabel: str, tooltips: list, legend_loc="top_left",
-                          show_in_browser=True, plot_mean=False, fit=None, bounds=None, plot_range="zero_max", fit_params=None, annotation_text=None, annotation_pos=None):
-    source = ColumnDataSource(junctions_Isweep_df)
+                          show_in_browser=True, plot_mean=False, fit=None, bounds=None, plot_range="zero_max", fit_params=None, annotation_text=None, annotation_pos=None, use_temp_data=False):
+    
+    if use_temp_data:
+        this_df = junctions_df
+    else:
+        this_df = junctions_Isweep_df
+    
+    source = ColumnDataSource(this_df)
     source_filtered_out = ColumnDataSource(junctions_Isweep_filtered_out_df)
     source_mean = ColumnDataSource(junctions_mean_df)
-    chip_names = list(set(junctions_Isweep_df["chip_name"].unique()) | set(junctions_Isweep_filtered_out_df["chip_name"].unique()))
 
     min_x = 999999999
     max_x = 0
@@ -210,10 +219,11 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
         else:
             corrected_str = ""
 
-        for m, chip_name in enumerate(chip_names):
+        for m, chip_name in enumerate(CHIP_NAMES):
             filter_chip = GroupFilter(column_name="chip_name", group=chip_name)
-            chip_df = junctions_Isweep_df[junctions_Isweep_df["chip_name"] == chip_name]
-            chip_filtered_out_df = junctions_Isweep_filtered_out_df[junctions_Isweep_filtered_out_df["chip_name"]==chip_name]
+            chip_df = this_df[this_df["chip_name"] == chip_name]
+            if not use_temp_data:
+                chip_filtered_out_df = junctions_Isweep_filtered_out_df[junctions_Isweep_filtered_out_df["chip_name"]==chip_name]
 
             ### short feedlines
             # plot points with different marker for every chip 
@@ -225,15 +235,16 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                     fillcolor = fillcolorlist[i]
                 p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}", view=view, size=10, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
 
-            # plot points that were filtered out muted
-            # if not "corr" in x and not "corr" in ylist[i]:
-            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "short"].empty:
-                view = CDSView(filter=(filter_short & filter_chip))
-                if fillcolorlist[i] == "same":
-                    fillcolor = "blue"
-                else:
-                    fillcolor = fillcolorlist[i]
-                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
+            if not use_temp_data:
+                # plot points that were filtered out muted
+                # if not "corr" in x and not "corr" in ylist[i]:
+                if not chip_filtered_out_df[chip_filtered_out_df["type"] == "short"].empty:
+                    view = CDSView(filter=(filter_short & filter_chip))
+                    if fillcolorlist[i] == "same":
+                        fillcolor = "blue"
+                    else:
+                        fillcolor = fillcolorlist[i]
+                    p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, short feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="blue", fill_color=fillcolor, marker=MARKER_LIST[m])
 
             ### long feedlines
             # plot points with different marker for every chip 
@@ -245,21 +256,23 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                     fillcolor = fillcolorlist[i]
                 p.scatter(source=source, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}", view=view, size=10, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
             
-            # plot points that were filtered out muted
-            # if not "corr" in x and not "corr" in ylist[i]:
-            if not chip_filtered_out_df[chip_filtered_out_df["type"] == "long"].empty:
-                view = CDSView(filter=(filter_long & filter_chip))
-                if fillcolorlist[i] == "same":
-                    fillcolor = "red"
-                else:
-                    fillcolor = fillcolorlist[i]
-                p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
+            if not use_temp_data:
+                # plot points that were filtered out muted
+                # if not "corr" in x and not "corr" in ylist[i]:
+                if not chip_filtered_out_df[chip_filtered_out_df["type"] == "long"].empty:
+                    view = CDSView(filter=(filter_long & filter_chip))
+                    if fillcolorlist[i] == "same":
+                        fillcolor = "red"
+                    else:
+                        fillcolor = fillcolorlist[i]
+                    p.scatter(source=source_filtered_out, x=x, y=ylist[i], legend_label=f"{chip_name}, long feedline{corrected_str}, filtered out", view=view, size=10, line_alpha=0.3, fill_alpha=0.3, line_color="red", fill_color=fillcolor, marker=MARKER_LIST[m])
     
             min_x = chip_df[x].min() if min_x > chip_df[x].min() else min_x
             max_x = chip_df[x].max() if max_x < chip_df[x].max() else max_x
-            if not "corr" in x and not "corr" in ylist[i]:
-                min_x = chip_filtered_out_df[x].min() if min_x > chip_filtered_out_df[x].min() else min_x
-                max_x = chip_filtered_out_df[x].max() if max_x < chip_filtered_out_df[x].max() else max_x
+            if not use_temp_data:
+                if not "corr" in x and not "corr" in ylist[i]:
+                    min_x = chip_filtered_out_df[x].min() if min_x > chip_filtered_out_df[x].min() else min_x
+                    max_x = chip_filtered_out_df[x].max() if max_x < chip_filtered_out_df[x].max() else max_x
 
     
     if plot_mean:
@@ -284,9 +297,9 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                 # corrected_str = ""
             else:
                 corrected_str = ""
-            coeff = np.polyfit(junctions_Isweep_df[x], junctions_Isweep_df[ylist[i]], 1)
+            coeff = np.polyfit(this_df[x], this_df[ylist[i]], 1)
             poly1d_fn = np.poly1d(coeff)
-            # x_range = np.arange(0,junctions_Isweep_df[x].max()*1.05, junctions_Isweep_df[x].max()/100)
+            # x_range = np.arange(0,this_df[x].max()*1.05, this_df[x].max()/100)
             p.line(x=x_range, y=poly1d_fn(x_range), legend_label=f"Linear Fit {ylist[i]}{corrected_str}", color="black", line_dash=DASH_STYLES[i])
     elif fit == "line0intercept":
         for i, x in enumerate(xlist):
@@ -294,9 +307,9 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                 corrected_str = ", corrected area"
             else:
                 corrected_str = ""
-            xvals = junctions_Isweep_df[x].to_numpy()
+            xvals = this_df[x].to_numpy()
             xvals = xvals[:,np.newaxis]
-            yvals = np.array(junctions_Isweep_df[ylist[i]])
+            yvals = np.array(this_df[ylist[i]])
             a, _, _, _ = np.linalg.lstsq(xvals, yvals, rcond=None)
             p.line(x=x_range, y=a*x_range, legend_label=f"Linear Fit Zero Intercept {ylist[i]}{corrected_str}", color="black", line_dash=DASH_STYLES[i])
     elif fit:
@@ -305,9 +318,15 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
                 corrected_str = ", corrected area"
             else:
                 corrected_str = ""
-            xvals = junctions_Isweep_df[x]
-            yvals = junctions_Isweep_df[ylist[i]]
-            popt, pcov = curve_fit(fit, xvals, yvals)
+
+            this_df_no_nans = this_df[this_df[x].notna()]
+            this_df_no_nans = this_df_no_nans[this_df_no_nans[ylist[i]].notna()]
+            xvals = this_df_no_nans[x]
+            yvals = this_df_no_nans[ylist[i]]
+            if bounds:
+                popt, pcov = curve_fit(fit, xvals, yvals, bounds=bounds)
+            else:
+                popt, pcov = curve_fit(fit, xvals, yvals)
             fit_params.append(popt)
             p.line(x=x_range, y=fit(x_range, *popt), legend_label=f"Fit {ylist[i]}{corrected_str}", color="black", line_dash=DASH_STYLES[i])
 
@@ -590,144 +609,23 @@ p_R_N_A_corr2 = plot_marker_for_chips(
     show_in_browser=True,
 )
 
-# ### --- output R_N over Area --- ###
-# source = ColumnDataSource(junctions_Isweep_df)
-# source_mean = ColumnDataSource(junctions_mean_df)
-
-# OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "normal_resistances.html")
-# output_file(filename=OUTPUT_FILEPATH)
-
-# TOOLTIPS_R_N = [
-#     # ("index", "$index"),
-#     ("measurement", "@meas"),
-#     ("T", "@T"),
-#     ("j_c", "@j_c"),
-#     ("R_sg/R_N", "@R_sg_R_N"),
-#     ("I_C*R_N", "@I_c_R_N"),
-#     ("A corrected", "@A_corr1"),
-# ]
-# p_R_N = figure(title=r"\[\text{Normal Resistances}\]", width=1000, height=600, tooltips=TOOLTIPS_R_N)
-# view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
-# view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
-# p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
-# p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
-# p_R_N.scatter(source=source_mean, x="A", y="R_N",legend_label = "Mean Values", size=10, color="black", marker="x")
-# p_R_N.asterisk(source=source_mean, x="A_corr1", y="R_N",legend_label = "Corrected Mean Values", size=10, color="black")
-
-
-# ### 1/ x fit to uncorrected data
-# # A_1 = float(junctions_mean_df["A"].iloc[-2])
-# # A_2 = float(junctions_mean_df["A"].iloc[-1])
-# # R_1 = junctions_mean_df["R_N"].iloc[-2]
-# # R_2 = junctions_mean_df["R_N"].iloc[-1]
-# # # R_N = c1*A^(-1) + c0
-# # c1 = (R_1 - R_2) / ((1/A_1) - (1/A_2))
-# # c0 = R_1 - (c1/A_1)
-
-# # As = np.arange(float(junctions_mean_df["A"].iloc[0])-10, float(junctions_mean_df["A"].iloc[-1])+10, 0.1)
-# # Rs = c1/As + c0
-
-# # p_R_N.line(x=As, y=Rs, legend_label = "1/x Fit", color="black")
-
-# # TODO: c1 ist rho_0??
-
-# x = junctions_Isweep_df["A"]
-# x_corr = junctions_Isweep_df["A_corr2_Ic"]
-# y = junctions_Isweep_df["R_N"]
-# # min_T_c = x.min()
-# # max_T_c = 9.3 # K  (literature value: 9.26K, according to Wikipedia)
-# # min_Delta_0_eV = y.min() / 2
-# # max_Delta_0_eV = 3.05e-3 / 2  # literature gap voltage value 2.96e-3V at 4.2K, 3.05e-3V at 0K, should be well under this value
-# # bounds = ([min_T_c, min_Delta_0_eV],[max_T_c, max_Delta_0_eV])
-# # print(bounds)
-# popt, pcov = curve_fit(one_over_x_fit, x, y) #, p0=[c1,c0]) #, bounds=bounds)
-# # print(f"\n{popt}")
-# # print(f"First guess values: {[c1,c0]}")
-# x_range = np.arange(float(junctions_Isweep_df["A"].min())-10, float(junctions_Isweep_df["A"].max())+10, 0.1)
-# line_fit_R_N = p_R_N.line(x=x_range, y=one_over_x_fit(x_range, *popt), legend_label="1/A fit", color="black")
-
-# popt_corr, pcov_corr = curve_fit(one_over_x_fit, x_corr, y)
-# line_fit_R_N_corr = p_R_N.line(x=x_range, y=one_over_x_fit(x_range, *popt_corr), legend_label="1/A fit corrected", color="black", line_dash="dashed")
-
-
-# line_R_N_hover_tool = HoverTool(renderers=[line_fit_R_N], tooltips=[("A", "$x um²"),("R_N", "$y Ohm"),])
-# p_R_N.add_tools(line_R_N_hover_tool)
-
-# # ## 1/ x fit to corrected data
-# # A_1 = float(junctions_mean_df["A_corr1"].iloc[-2])
-# # A_2 = float(junctions_mean_df["A_corr1"].iloc[-1])
-# # R_1 = junctions_mean_df["R_N"].iloc[-2]
-# # R_2 = junctions_mean_df["R_N"].iloc[-1]
-# # # R_N = c1*A^(-1) + c0
-# # c1 = (R_1 - R_2) / ((1/A_1) - (1/A_2))
-# # c0 = R_1 - (c1/A_1)
-
-# # # As = np.arange(float(junctions_mean_df["A_corr1"].iloc[0])-10, float(junctions_mean_df["A_corr1"].iloc[-1])+10, 0.1)
-# # Rs = c1/As + c0
-
-# # p_R_N.line(x=As, y=Rs,legend_label = "1/x Fit corrected", color="black", line_dash="dashed")
-
-# # legend
-# p_R_N.legend.location = "top_right"
-# p_R_N.legend.click_policy="hide"
-# # x-axis
-# p_R_N.xaxis.axis_label = r"\[\text{Junction Area } A \mathrm{~[\mu m^{2}]}\]"
-# p_R_N.xaxis.axis_label_text_font_size = font_size_axis
-# p_R_N.xaxis.axis_label_text_font_style = font_style_axis
-# p_R_N.xaxis.major_label_text_font_size = font_size_major_ticks
-# p_R_N.x_range.start = 0
-# # y-axis
-# p_R_N.yaxis.axis_label = r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]"
-# p_R_N.yaxis.axis_label_text_font_size = font_size_axis
-# p_R_N.yaxis.axis_label_text_font_style = font_style_axis
-# p_R_N.yaxis.major_label_text_font_size = font_size_major_ticks
-# # title
-# p_R_N.title.text_font_size = font_size_title
-# p_R_N.title.text_font_style = font_style_title
-
-# save(p_R_N)
-
 ### --- Plot j_c over temperature --- ###
-source_temp = ColumnDataSource(junctions_df)
-
-OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "critical_current_density_over_T.html")
-output_file(filename=OUTPUT_FILEPATH)
-
-TOOLTIPS_J_C_T = [
-    # ("index", "$index"),
-    ("measurement", "@meas"),
-    ("length", "@L"),
-    ("j_c", "@j_c"),
-    ("R_sg/R_N", "@R_sg_R_N"),
-    ("I_C*R_N", "@I_c_R_N")
-]
-p_j_c_T = figure(title=r"\[\text{Critical Current Density over Temperature}\]", width=1000, height=600, tooltips=TOOLTIPS_J_C_T)
-view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
-p_j_c_T.circle(source=source_temp, x="T", y="j_c",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
-view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
-p_j_c_T.circle(source=source_temp, x="T", y="j_c",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
-
-# legend
-p_j_c_T.legend.location = "top_left"
-p_j_c_T.legend.click_policy="hide"
-# x-axis
-p_j_c_T.xaxis.axis_label = r"\[\text{Temperature } T \mathrm{~[K]}\]"
-p_j_c_T.xaxis.axis_label_text_font_size = font_size_axis
-p_j_c_T.xaxis.axis_label_text_font_style = font_style_axis
-p_j_c_T.xaxis.major_label_text_font_size = font_size_major_ticks
-# y-axis
-p_j_c_T.yaxis.axis_label = r"\[ \text{Critical Current Density } j_c \mathrm{~[A/cm^2]} \]"
-p_j_c_T.yaxis.axis_label_text_font_size = font_size_axis
-p_j_c_T.yaxis.axis_label_text_font_style = font_style_axis
-p_j_c_T.yaxis.major_label_text_font_size = font_size_major_ticks
-# title
-p_j_c_T.title.text_font_size = font_size_title
-p_j_c_T.title.text_font_style = font_style_title
-
-save(p_j_c_T)
+p_j_c_T = plot_marker_for_chips(
+    html_name="critical_current_density_over_T.html",
+    title=r"\[\text{Critical Current Density over Temperature}\]",
+    xlist=["T"],
+    ylist=["j_c"],
+    use_temp_data=True,
+    fillcolorlist=["same"],
+    xlabel=r"\[\text{Temperature } T \mathrm{~[K]}\]",
+    ylabel=r"\[ \text{Critical Current Density } j_c \mathrm{~[A/cm^2]} \]",
+    tooltips=TOOLTIPS,
+    plot_mean=False,
+    legend_loc="top_right",
+    show_in_browser=True,
+)
 
 ### --- Plot V_g over temperature --- ###
-
 def V_g_over_T(T, T_c, Delta_0_eV):
     # T: variable temperature
     # T_c, Delta_0: parameters for fit
@@ -736,32 +634,6 @@ def V_g_over_T(T, T_c, Delta_0_eV):
     V_g = Delta_T_eV * 2
     return V_g
 
-source_V_g_temp = ColumnDataSource(junctions_df)
-
-OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "gap_voltage_over_T.html")
-output_file(filename=OUTPUT_FILEPATH)
-
-TOOLTIPS_V_G_T = [
-    # ("index", "$index"),
-    ("measurement", "@meas"),
-    ("T", "@T"),
-    ("length", "@L"),
-    ("j_c", "@j_c"),
-    ("R_sg/R_N", "@R_sg_R_N"),
-    ("I_C*R_N", "@I_c_R_N")
-]
-
-
-# plotting
-p_V_g_T = figure(title=r"\[\text{Gap Voltage over Temperature}\]", width=1000, height=600) #, tooltips=TOOLTIPS_V_G_T)
-view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
-view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
-circ_short = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
-circ_long = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
-circ_hover_tool = HoverTool(renderers=[circ_short, circ_long], tooltips=TOOLTIPS_V_G_T)
-p_V_g_T.add_tools(circ_hover_tool)
-
-# curve fits:
 junctions_df_no_nans = junctions_df[junctions_df["V_g_mean"].notna()]
 x = junctions_df_no_nans["T"]
 y = junctions_df_no_nans["V_g_mean"]
@@ -771,37 +643,96 @@ min_Delta_0_eV = y.min() / 2
 max_Delta_0_eV = 3.05e-3 / 2  # literature gap voltage value 2.96e-3V at 4.2K, 3.05e-3V at 0K, should be well under this value
 bounds = ([min_T_c, min_Delta_0_eV],[max_T_c, max_Delta_0_eV])
 popt, pcov = curve_fit(V_g_over_T, x, y, bounds=bounds)
-x_range = np.arange(0, x.max()+1, 0.1)
-line_fit = p_V_g_T.line(x=x_range, y=V_g_over_T(x_range, *popt), legend_label="BCS fit", color="black")
-line_hover_tool = HoverTool(renderers=[line_fit], tooltips=[("T", "$x K"),("V_g", "$y V"),])
-p_V_g_T.add_tools(line_hover_tool)
 
-annotation1 = Label(x=40, y=40, x_units='screen', y_units='screen',
-                 text=f"$$T_c = {popt[0]:.2f}K,~~\Delta_0 = {Float(popt[1]):.2h}eV$$")
+params = []
 
-# annotation2 = Label(x=40, y=60, x_units='screen', y_units='screen',
-#                  text="$$\dfrac{\Delta (T)}{\Delta (0)} \simeq \left[ 1-\left(\dfrac{T}{T_c}\right)^{4}\right]^{2/3}$$")
+p_V_g_T = plot_marker_for_chips(
+    html_name="gap_voltage_over_T.html",
+    title=r"\[\text{Gap Voltage over Temperature}\]",
+    xlist=["T"],
+    ylist=["V_g_mean"],
+    use_temp_data=True,
+    fillcolorlist=["same"],
+    xlabel=r"\[\text{Temperature } T \mathrm{~[K]}\]",
+    ylabel=r"\[ \text{Gap Voltage } V_g \mathrm{~[V]} \]",
+    tooltips=TOOLTIPS,
+    # plot_mean=True,
+    legend_loc="bottom_left",
+    fit=V_g_over_T,
+    bounds=bounds,
+    plot_range="zero_max",
+    fit_params=params,
+    annotation_text=f"$$T_c = {popt[0]:.2f}K,~~\Delta_0 = {Float(popt[1]):.2h}eV$$",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
+    annotation_pos="bottom_right",
+    show_in_browser=True,
+)
 
-p_V_g_T.add_layout(annotation1)
-# p_V_g_T.add_layout(annotation2)
+# source_V_g_temp = ColumnDataSource(junctions_df)
+
+# OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "gap_voltage_over_T.html")
+# output_file(filename=OUTPUT_FILEPATH)
+
+# TOOLTIPS_V_G_T = [
+#     # ("index", "$index"),
+#     ("measurement", "@meas"),
+#     ("T", "@T"),
+#     ("length", "@L"),
+#     ("j_c", "@j_c"),
+#     ("R_sg/R_N", "@R_sg_R_N"),
+#     ("I_C*R_N", "@I_c_R_N")
+# ]
 
 
-# legend
-p_V_g_T.legend.location = "top_right"
-p_V_g_T.legend.click_policy="hide"
-# x-axis
-p_V_g_T.xaxis.axis_label = r"\[\text{Temperature } T \mathrm{~[K]}\]"
-p_V_g_T.xaxis.axis_label_text_font_size = font_size_axis
-p_V_g_T.xaxis.axis_label_text_font_style = font_style_axis
-p_V_g_T.xaxis.major_label_text_font_size = font_size_major_ticks
-# y-axis
-p_V_g_T.yaxis.axis_label = r"\[ \text{Gap Voltage } V_g \mathrm{~[V]} \]"
-p_V_g_T.yaxis.axis_label_text_font_size = font_size_axis
-p_V_g_T.yaxis.axis_label_text_font_style = font_style_axis
-p_V_g_T.yaxis.major_label_text_font_size = font_size_major_ticks
-# title
-p_V_g_T.title.text_font_size = font_size_title
-p_V_g_T.title.text_font_style = font_style_title
+# # plotting
+# p_V_g_T = figure(title=r"\[\text{Gap Voltage over Temperature}\]", width=1000, height=600) #, tooltips=TOOLTIPS_V_G_T)
+# view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
+# view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
+# circ_short = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
+# circ_long = p_V_g_T.circle(source=source_V_g_temp, x="T", y="V_g_mean",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
+# circ_hover_tool = HoverTool(renderers=[circ_short, circ_long], tooltips=TOOLTIPS_V_G_T)
+# p_V_g_T.add_tools(circ_hover_tool)
 
-save(p_V_g_T)
+# # curve fits:
+# junctions_df_no_nans = junctions_df[junctions_df["V_g_mean"].notna()]
+# x = junctions_df_no_nans["T"]
+# y = junctions_df_no_nans["V_g_mean"]
+# min_T_c = x.min()
+# max_T_c = 9.3 # K  (literature value: 9.26K, according to Wikipedia)
+# min_Delta_0_eV = y.min() / 2
+# max_Delta_0_eV = 3.05e-3 / 2  # literature gap voltage value 2.96e-3V at 4.2K, 3.05e-3V at 0K, should be well under this value
+# bounds = ([min_T_c, min_Delta_0_eV],[max_T_c, max_Delta_0_eV])
+# popt, pcov = curve_fit(V_g_over_T, x, y, bounds=bounds)
+# x_range = np.arange(0, x.max()+1, 0.1)
+# line_fit = p_V_g_T.line(x=x_range, y=V_g_over_T(x_range, *popt), legend_label="BCS fit", color="black")
+# line_hover_tool = HoverTool(renderers=[line_fit], tooltips=[("T", "$x K"),("V_g", "$y V"),])
+# p_V_g_T.add_tools(line_hover_tool)
+
+# annotation1 = Label(x=40, y=40, x_units='screen', y_units='screen',
+#                  text=f"$$T_c = {popt[0]:.2f}K,~~\Delta_0 = {Float(popt[1]):.2h}eV$$")
+
+# # annotation2 = Label(x=40, y=60, x_units='screen', y_units='screen',
+# #                  text="$$\dfrac{\Delta (T)}{\Delta (0)} \simeq \left[ 1-\left(\dfrac{T}{T_c}\right)^{4}\right]^{2/3}$$")
+
+# p_V_g_T.add_layout(annotation1)
+# # p_V_g_T.add_layout(annotation2)
+
+
+# # legend
+# p_V_g_T.legend.location = "top_right"
+# p_V_g_T.legend.click_policy="hide"
+# # x-axis
+# p_V_g_T.xaxis.axis_label = r"\[\text{Temperature } T \mathrm{~[K]}\]"
+# p_V_g_T.xaxis.axis_label_text_font_size = font_size_axis
+# p_V_g_T.xaxis.axis_label_text_font_style = font_style_axis
+# p_V_g_T.xaxis.major_label_text_font_size = font_size_major_ticks
+# # y-axis
+# p_V_g_T.yaxis.axis_label = r"\[ \text{Gap Voltage } V_g \mathrm{~[V]} \]"
+# p_V_g_T.yaxis.axis_label_text_font_size = font_size_axis
+# p_V_g_T.yaxis.axis_label_text_font_style = font_style_axis
+# p_V_g_T.yaxis.major_label_text_font_size = font_size_major_ticks
+# # title
+# p_V_g_T.title.text_font_size = font_size_title
+# p_V_g_T.title.text_font_style = font_style_title
+
+# save(p_V_g_T)
 
