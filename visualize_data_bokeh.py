@@ -188,13 +188,13 @@ TOOLTIPS = [
 ]
 
 def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, fillcolorlist: list, xlabel: str, ylabel: str, tooltips: list, legend_loc="top_left",
-                          show_in_browser=True, plot_mean=False, fit=None, bounds=None, fit_params=None, annotation_text=None, annotation_pos=None):
+                          show_in_browser=True, plot_mean=False, fit=None, bounds=None, plot_range="zero_max", fit_params=None, annotation_text=None, annotation_pos=None):
     source = ColumnDataSource(junctions_Isweep_df)
     source_filtered_out = ColumnDataSource(junctions_Isweep_filtered_out_df)
     source_mean = ColumnDataSource(junctions_mean_df)
     chip_names = list(set(junctions_Isweep_df["chip_name"].unique()) | set(junctions_Isweep_filtered_out_df["chip_name"].unique()))
 
-    min_x = 0
+    min_x = 999999999
     max_x = 0
 
     OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, html_name)
@@ -268,7 +268,15 @@ def plot_marker_for_chips(html_name: str, title: str, xlist: list, ylist: list, 
             # p.asterisk(source=source_mean, x="A_corr1", y="j_c_corr1",legend_label = "corrected means", size=10, color="black")
 
 
-    x_range = np.arange(0,max_x*1.05,(max_x-min_x)/1000)
+    print(f"Min: {min_x}, max: {max_x}")
+    if plot_range == "zero_max":
+        x_range = np.arange(0,max_x*1.05,(max_x-0)/1000)
+    elif plot_range == "min_max":
+        x_range = np.arange(min_x*0.95,max_x*1.05,(max_x-min_x)/1000)
+    else:
+        # to be implemented
+        x_range = np.arange(0,max_x*1.05,(max_x-0)/1000)
+
     if fit == "line":
         for i, x in enumerate(xlist):
             if "corr" in x or "corr" in ylist[i]:
@@ -554,110 +562,130 @@ p_invR_N_A_corr2 = plot_marker_for_chips(
     legend_loc="top_left",
     fit=fit_1_over_R_N,
     fit_params=[],
-    annotation_text="\[ r_{0,corr} = " + f"{rho_0_corr2_1:.2f}" + "\Omega \cdot \mu m^2,~\Delta W = " + f"{Float(deltaW_corr2_1*10**(-6)):.2h}m \]",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
+    annotation_text=r"\[ \rho_{0,corr} = " + f"{rho_0_corr2_1:.2f}" + r"\Omega \cdot \mu m^2,~\Delta W = " + f"{Float(deltaW_corr2_1*10**(-6)):.2h}" + r"m \]",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
     annotation_pos="bottom_right",
     show_in_browser=True,
 )
 
-### --- output R_N over Area --- ###
-source = ColumnDataSource(junctions_Isweep_df)
-source_mean = ColumnDataSource(junctions_mean_df)
-
-OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "normal_resistances.html")
-output_file(filename=OUTPUT_FILEPATH)
-
-TOOLTIPS_R_N = [
-    # ("index", "$index"),
-    ("measurement", "@meas"),
-    ("T", "@T"),
-    ("j_c", "@j_c"),
-    ("R_sg/R_N", "@R_sg_R_N"),
-    ("I_C*R_N", "@I_c_R_N"),
-    ("A corrected", "@A_corr1"),
-]
-p_R_N = figure(title=r"\[\text{Normal Resistances}\]", width=1000, height=600, tooltips=TOOLTIPS_R_N)
-view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
-view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
-p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
-p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
-p_R_N.scatter(source=source_mean, x="A", y="R_N",legend_label = "Mean Values", size=10, color="black", marker="x")
-p_R_N.asterisk(source=source_mean, x="A_corr1", y="R_N",legend_label = "Corrected Mean Values", size=10, color="black")
-
-
-### 1/ x fit to uncorrected data
-# A_1 = float(junctions_mean_df["A"].iloc[-2])
-# A_2 = float(junctions_mean_df["A"].iloc[-1])
-# R_1 = junctions_mean_df["R_N"].iloc[-2]
-# R_2 = junctions_mean_df["R_N"].iloc[-1]
-# # R_N = c1*A^(-1) + c0
-# c1 = (R_1 - R_2) / ((1/A_1) - (1/A_2))
-# c0 = R_1 - (c1/A_1)
-
-# As = np.arange(float(junctions_mean_df["A"].iloc[0])-10, float(junctions_mean_df["A"].iloc[-1])+10, 0.1)
-# Rs = c1/As + c0
-
-# p_R_N.line(x=As, y=Rs, legend_label = "1/x Fit", color="black")
-
 def one_over_x_fit(x, c1, c0):
     return c1/x + c0
 
-# TODO: c1 ist rho_0??
+### --- output R_N over Area --- ###
+p_R_N_A_corr2 = plot_marker_for_chips(
+    html_name="normal_resistances_R_N_corr2.html",
+    title=r"\[\text{Normal Resistance over Area, Area Correction with Critical Current}\]",
+    xlist=["A", "A_corr2_Ic"],
+    ylist=["R_N", "R_N"],
+    fillcolorlist=["same", None],
+    xlabel=r"\[ \text{Junction Area } A \mathrm{~[\mu m^{2}]} \]",
+    ylabel=r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]",
+    tooltips=TOOLTIPS,
+    plot_mean=True,
+    legend_loc="top_right",
+    fit=one_over_x_fit,
+    plot_range="min_max",
+    fit_params=[],
+    annotation_text=r"\[\Delta W = " + f"{Float(deltaW_corr2_2*10**(-6)):.2h}m " + r"\]",  # f"$$j_c = {j_c:.2f}A/cm^2$$",
+    annotation_pos="bottom_right",
+    show_in_browser=True,
+)
 
-x = junctions_Isweep_df["A"]
-x_corr = junctions_Isweep_df["A_corr2_Ic"]
-y = junctions_Isweep_df["R_N"]
-# min_T_c = x.min()
-# max_T_c = 9.3 # K  (literature value: 9.26K, according to Wikipedia)
-# min_Delta_0_eV = y.min() / 2
-# max_Delta_0_eV = 3.05e-3 / 2  # literature gap voltage value 2.96e-3V at 4.2K, 3.05e-3V at 0K, should be well under this value
-# bounds = ([min_T_c, min_Delta_0_eV],[max_T_c, max_Delta_0_eV])
-# print(bounds)
-popt, pcov = curve_fit(one_over_x_fit, x, y) #, p0=[c1,c0]) #, bounds=bounds)
-# print(f"\n{popt}")
-# print(f"First guess values: {[c1,c0]}")
-x_range = np.arange(float(junctions_Isweep_df["A"].min())-10, float(junctions_Isweep_df["A"].max())+10, 0.1)
-line_fit_R_N = p_R_N.line(x=x_range, y=one_over_x_fit(x_range, *popt), legend_label="1/A fit", color="black")
+# ### --- output R_N over Area --- ###
+# source = ColumnDataSource(junctions_Isweep_df)
+# source_mean = ColumnDataSource(junctions_mean_df)
 
-popt_corr, pcov_corr = curve_fit(one_over_x_fit, x_corr, y)
-line_fit_R_N_corr = p_R_N.line(x=x_range, y=one_over_x_fit(x_range, *popt_corr), legend_label="1/A fit corrected", color="black", line_dash="dashed")
+# OUTPUT_FILEPATH = os.path.join(OUTPUT_DIR, "normal_resistances.html")
+# output_file(filename=OUTPUT_FILEPATH)
+
+# TOOLTIPS_R_N = [
+#     # ("index", "$index"),
+#     ("measurement", "@meas"),
+#     ("T", "@T"),
+#     ("j_c", "@j_c"),
+#     ("R_sg/R_N", "@R_sg_R_N"),
+#     ("I_C*R_N", "@I_c_R_N"),
+#     ("A corrected", "@A_corr1"),
+# ]
+# p_R_N = figure(title=r"\[\text{Normal Resistances}\]", width=1000, height=600, tooltips=TOOLTIPS_R_N)
+# view_short = CDSView(filter=GroupFilter(column_name="type", group="short"))
+# view_long = CDSView(filter=GroupFilter(column_name="type", group="long"))
+# p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Short Feedline", view=view_short, size=10, color="blue")
+# p_R_N.circle(source=source, x="A", y="R_N",legend_label = "Long Feedline" ,view=view_long, size=10, color="red")
+# p_R_N.scatter(source=source_mean, x="A", y="R_N",legend_label = "Mean Values", size=10, color="black", marker="x")
+# p_R_N.asterisk(source=source_mean, x="A_corr1", y="R_N",legend_label = "Corrected Mean Values", size=10, color="black")
 
 
-line_R_N_hover_tool = HoverTool(renderers=[line_fit_R_N], tooltips=[("A", "$x um²"),("R_N", "$y Ohm"),])
-p_R_N.add_tools(line_R_N_hover_tool)
+# ### 1/ x fit to uncorrected data
+# # A_1 = float(junctions_mean_df["A"].iloc[-2])
+# # A_2 = float(junctions_mean_df["A"].iloc[-1])
+# # R_1 = junctions_mean_df["R_N"].iloc[-2]
+# # R_2 = junctions_mean_df["R_N"].iloc[-1]
+# # # R_N = c1*A^(-1) + c0
+# # c1 = (R_1 - R_2) / ((1/A_1) - (1/A_2))
+# # c0 = R_1 - (c1/A_1)
 
-# ## 1/ x fit to corrected data
-# A_1 = float(junctions_mean_df["A_corr1"].iloc[-2])
-# A_2 = float(junctions_mean_df["A_corr1"].iloc[-1])
-# R_1 = junctions_mean_df["R_N"].iloc[-2]
-# R_2 = junctions_mean_df["R_N"].iloc[-1]
-# # R_N = c1*A^(-1) + c0
-# c1 = (R_1 - R_2) / ((1/A_1) - (1/A_2))
-# c0 = R_1 - (c1/A_1)
+# # As = np.arange(float(junctions_mean_df["A"].iloc[0])-10, float(junctions_mean_df["A"].iloc[-1])+10, 0.1)
+# # Rs = c1/As + c0
 
-# # As = np.arange(float(junctions_mean_df["A_corr1"].iloc[0])-10, float(junctions_mean_df["A_corr1"].iloc[-1])+10, 0.1)
-# Rs = c1/As + c0
+# # p_R_N.line(x=As, y=Rs, legend_label = "1/x Fit", color="black")
 
-# p_R_N.line(x=As, y=Rs,legend_label = "1/x Fit corrected", color="black", line_dash="dashed")
+# # TODO: c1 ist rho_0??
 
-# legend
-p_R_N.legend.location = "top_right"
-p_R_N.legend.click_policy="hide"
-# x-axis
-p_R_N.xaxis.axis_label = r"\[\text{Junction Area } A \mathrm{~[\mu m^{2}]}\]"
-p_R_N.xaxis.axis_label_text_font_size = font_size_axis
-p_R_N.xaxis.axis_label_text_font_style = font_style_axis
-p_R_N.xaxis.major_label_text_font_size = font_size_major_ticks
-p_R_N.x_range.start = 0
-# y-axis
-p_R_N.yaxis.axis_label = r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]"
-p_R_N.yaxis.axis_label_text_font_size = font_size_axis
-p_R_N.yaxis.axis_label_text_font_style = font_style_axis
-p_R_N.yaxis.major_label_text_font_size = font_size_major_ticks
-# title
-p_R_N.title.text_font_size = font_size_title
-p_R_N.title.text_font_style = font_style_title
+# x = junctions_Isweep_df["A"]
+# x_corr = junctions_Isweep_df["A_corr2_Ic"]
+# y = junctions_Isweep_df["R_N"]
+# # min_T_c = x.min()
+# # max_T_c = 9.3 # K  (literature value: 9.26K, according to Wikipedia)
+# # min_Delta_0_eV = y.min() / 2
+# # max_Delta_0_eV = 3.05e-3 / 2  # literature gap voltage value 2.96e-3V at 4.2K, 3.05e-3V at 0K, should be well under this value
+# # bounds = ([min_T_c, min_Delta_0_eV],[max_T_c, max_Delta_0_eV])
+# # print(bounds)
+# popt, pcov = curve_fit(one_over_x_fit, x, y) #, p0=[c1,c0]) #, bounds=bounds)
+# # print(f"\n{popt}")
+# # print(f"First guess values: {[c1,c0]}")
+# x_range = np.arange(float(junctions_Isweep_df["A"].min())-10, float(junctions_Isweep_df["A"].max())+10, 0.1)
+# line_fit_R_N = p_R_N.line(x=x_range, y=one_over_x_fit(x_range, *popt), legend_label="1/A fit", color="black")
 
-save(p_R_N)
+# popt_corr, pcov_corr = curve_fit(one_over_x_fit, x_corr, y)
+# line_fit_R_N_corr = p_R_N.line(x=x_range, y=one_over_x_fit(x_range, *popt_corr), legend_label="1/A fit corrected", color="black", line_dash="dashed")
+
+
+# line_R_N_hover_tool = HoverTool(renderers=[line_fit_R_N], tooltips=[("A", "$x um²"),("R_N", "$y Ohm"),])
+# p_R_N.add_tools(line_R_N_hover_tool)
+
+# # ## 1/ x fit to corrected data
+# # A_1 = float(junctions_mean_df["A_corr1"].iloc[-2])
+# # A_2 = float(junctions_mean_df["A_corr1"].iloc[-1])
+# # R_1 = junctions_mean_df["R_N"].iloc[-2]
+# # R_2 = junctions_mean_df["R_N"].iloc[-1]
+# # # R_N = c1*A^(-1) + c0
+# # c1 = (R_1 - R_2) / ((1/A_1) - (1/A_2))
+# # c0 = R_1 - (c1/A_1)
+
+# # # As = np.arange(float(junctions_mean_df["A_corr1"].iloc[0])-10, float(junctions_mean_df["A_corr1"].iloc[-1])+10, 0.1)
+# # Rs = c1/As + c0
+
+# # p_R_N.line(x=As, y=Rs,legend_label = "1/x Fit corrected", color="black", line_dash="dashed")
+
+# # legend
+# p_R_N.legend.location = "top_right"
+# p_R_N.legend.click_policy="hide"
+# # x-axis
+# p_R_N.xaxis.axis_label = r"\[\text{Junction Area } A \mathrm{~[\mu m^{2}]}\]"
+# p_R_N.xaxis.axis_label_text_font_size = font_size_axis
+# p_R_N.xaxis.axis_label_text_font_style = font_style_axis
+# p_R_N.xaxis.major_label_text_font_size = font_size_major_ticks
+# p_R_N.x_range.start = 0
+# # y-axis
+# p_R_N.yaxis.axis_label = r"\[\text{Normal Resistance } R_N \mathrm{~[\Omega ]}\]"
+# p_R_N.yaxis.axis_label_text_font_size = font_size_axis
+# p_R_N.yaxis.axis_label_text_font_style = font_style_axis
+# p_R_N.yaxis.major_label_text_font_size = font_size_major_ticks
+# # title
+# p_R_N.title.text_font_size = font_size_title
+# p_R_N.title.text_font_style = font_style_title
+
+# save(p_R_N)
 
 ### --- Plot j_c over temperature --- ###
 source_temp = ColumnDataSource(junctions_df)
